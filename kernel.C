@@ -4,16 +4,16 @@
     Author: R. Bettati
             Department of Computer Science
             Texas A&M University
-    Date  : 17/04/03
+    Date  : 11/10/25
 
 
     This file has the main entry point to the operating system.
 
     MAIN FILE FOR MACHINE PROBLEM "KERNEL-LEVEL THREAD MANAGEMENT"
 
-    NOTE: REMEMBER THAT AT THE VERY BEGINNING WE DON'T HAVE A MEMORY MANAGER.
-          OBJECT THEREFORE HAVE TO BE ALLOCATED ON THE STACK.
-          THIS LEADS TO SOME RATHER CONVOLUTED CODE, WHICH WOULD BE MUCH
+    NOTE: REMEMBER THAT AT THE VERY BEGINNING WE DON'T HAVE A MEMORY MANAGER. 
+          OBJECT THEREFORE HAVE TO BE ALLOCATED ON THE STACK. 
+          THIS LEADS TO SOME RATHER CONVOLUTED CODE, WHICH WOULD BE MUCH 
           SIMPLER OTHERWISE.
 */
 
@@ -23,7 +23,7 @@
 
 /* -- COMMENT/UNCOMMENT THE FOLLOWING LINE TO EXCLUDE/INCLUDE SCHEDULER CODE */
 
-#define _USES_SCHEDULER_
+//#define _USES_SCHEDULER_
 /* This macro is defined when we want to force the code below to use
    a scheduler.
    Otherwise, no scheduler is used, and the threads pass control to each
@@ -33,7 +33,7 @@
 
 /* -- UNCOMMENT THE FOLLOWING LINE TO MAKE THREADS TERMINATING */
 
-#define _TERMINATING_FUNCTIONS_
+//#define _TERMINATING_FUNCTIONS_
 /* This macro is defined when we want the thread functions to return, and so
    terminate their thread.
    Otherwise, the thread functions don't return, and the threads run forever.
@@ -48,7 +48,7 @@
 #include "gdt.H"
 #include "idt.H"             /* EXCEPTION MGMT.   */
 #include "irq.H"
-#include "exceptions.H"
+#include "exceptions.H"    
 #include "interrupts.H"
 
 #include "simple_timer.H"    /* TIMER MANAGEMENT  */
@@ -57,6 +57,10 @@
 #include "mem_pool.H"
 
 #include "thread.H"          /* THREAD MANAGEMENT */
+//added for user scheduelr
+#define _USES_SCHEDULER_
+#define _TERMINATING_FUNCTIONS_
+
 
 #ifdef _USES_SCHEDULER_
 #include "scheduler.H"
@@ -72,32 +76,8 @@ FramePool * SYSTEM_FRAME_POOL;
 /* -- A POOL OF CONTIGUOUS MEMORY FOR THE SYSTEM TO USE */
 MemPool * MEMORY_POOL;
 
-typedef unsigned int size_t;
-
-//replace the operator "new"
-void * operator new (size_t size) {
-    unsigned long a = MEMORY_POOL->allocate((unsigned long)size);
-    return (void *)a;
-}
-
-//replace the operator "new[]"
-void * operator new[] (size_t size) {
-    unsigned long a = MEMORY_POOL->allocate((unsigned long)size);
-    return (void *)a;
-}
-
-//replace the operator "delete"
-void operator delete (void * p) {
-    MEMORY_POOL->release((unsigned long)p);
-}
-
-//replace the operator "delete[]"
-void operator delete[] (void * p) {
-    MEMORY_POOL->release((unsigned long)p);
-}
-
 /*--------------------------------------------------------------------------*/
-/* SCHEDULRE and AUXILIARY HAND-OFF FUNCTION FROM CURRENT THREAD TO NEXT */
+/* SCHEDULER */
 /*--------------------------------------------------------------------------*/
 
 #ifdef _USES_SCHEDULER_
@@ -107,9 +87,12 @@ Scheduler * SYSTEM_SCHEDULER;
 
 #endif
 
-void pass_on_CPU(Thread * _to_thread) {
-  // Hand over CPU from current thread to _to_thread.
+/*--------------------------------------------------------------------------*/
+/* JUST AN AUXILIARY FUNCTION */
+/*--------------------------------------------------------------------------*/
 
+void pass_on_CPU(Thread * _to_thread) {
+	return;
 #ifndef _USES_SCHEDULER_
 
         /* We don't use a scheduler. Explicitely pass control to the next
@@ -143,11 +126,11 @@ void fun1() {
     Console::puts("FUN 1 INVOKED!\n");
 
 #ifdef _TERMINATING_FUNCTIONS_
-    for(int j = 0; j < 10; j++)
+    for(int j = 0; j < 10; j++) 
 #else
-    for(int j = 0;; j++)
+    for(int j = 0;; j++) 
 #endif
-    {
+    {	
         Console::puts("FUN 1 IN BURST["); Console::puti(j); Console::puts("]\n");
         for (int i = 0; i < 10; i++) {
             Console::puts("FUN 1: TICK ["); Console::puti(i); Console::puts("]\n");
@@ -162,11 +145,11 @@ void fun2() {
     Console::puts("FUN 2 INVOKED!\n");
 
 #ifdef _TERMINATING_FUNCTIONS_
-    for(int j = 0; j < 10; j++)
+    for(int j = 0; j < 10; j++) 
 #else
-    for(int j = 0;; j++)
-#endif
-    {
+    for(int j = 0;; j++) 
+#endif  
+    {		
         Console::puts("FUN 2 IN BURST["); Console::puti(j); Console::puts("]\n");
         for (int i = 0; i < 10; i++) {
             Console::puts("FUN 2: TICK ["); Console::puti(i); Console::puts("]\n");
@@ -199,6 +182,38 @@ void fun4() {
         }
         pass_on_CPU(thread1);
     }
+}
+
+/*--------------------------------------------------------------------------*/
+/* MEMORY MANAGEMENT */
+/*--------------------------------------------------------------------------*/
+
+#ifdef MSDOS
+typedef unsigned long size_t;
+#else
+typedef unsigned int size_t;
+#endif
+
+//replace the operator "new"
+void * operator new (size_t size) {
+    unsigned long a = MEMORY_POOL->allocate((unsigned long)size);
+    return (void *)a;
+}
+
+//replace the operator "new[]"
+void * operator new[] (size_t size) {
+    unsigned long a = MEMORY_POOL->allocate((unsigned long)size);
+    return (void *)a;
+}
+
+//replace the operator "delete"
+void operator delete (void * p) {
+    MEMORY_POOL->release((unsigned long)p);
+}
+
+//replace the operator "delete[]"
+void operator delete[] (void * p) {
+    MEMORY_POOL->release((unsigned long)p);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -235,16 +250,14 @@ int main() {
     /* ---- Initialize a frame pool; details are in its implementation */
     FramePool system_frame_pool;
     SYSTEM_FRAME_POOL = &system_frame_pool;
-
+   
     /* ---- Create a memory pool of 256 frames. */
     MemPool memory_pool(SYSTEM_FRAME_POOL, 256);
     MEMORY_POOL = &memory_pool;
 
-    /* -- MEMORY ALLOCATOR IS INITIALIZED. WE CAN USE new/delete! --*/
-
     /* -- INITIALIZE THE TIMER (we use a very simple timer).-- */
 
-    /* Question: Why do we want a timer? We have it to make sure that
+    /* Question: Why do we want a timer? We have it to make sure that 
                  we enable interrupts correctly. If we forget to do it,
                  the timer "dies". */
 
@@ -255,15 +268,16 @@ int main() {
 #ifdef _USES_SCHEDULER_
 
     /* -- SCHEDULER -- IF YOU HAVE ONE -- */
-
-    SYSTEM_SCHEDULER = new Scheduler();
+ 
+    Scheduler system_scheduler = Scheduler();
+    SYSTEM_SCHEDULER = &system_scheduler;
 
 #endif
 
     /* NOTE: The timer chip starts periodically firing as
              soon as we enable interrupts.
              It is important to install a timer handler, as we
-             would get a lot of uncaptured interrupts otherwise. */
+             would get a lot of uncaptured interrupts otherwise. */ 
 
     /* -- ENABLE INTERRUPTS -- */
 
@@ -312,7 +326,7 @@ int main() {
 
     /* -- AND ALL THE REST SHOULD FOLLOW ... */
 
-    assert(false); /* WE SHOULD NEVER REACH THIS POINT. */
+    assert(FALSE); /* WE SHOULD NEVER REACH THIS POINT. */
 
     /* -- WE DO THE FOLLOWING TO KEEP THE COMPILER HAPPY. */
     return 1;

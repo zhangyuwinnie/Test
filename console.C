@@ -21,7 +21,6 @@
 #include "console.H"
 
 #include "utils.H"
-#include "machine.H"
 
 /*--------------------------------------------------------------------------*/
 /* DATA STRUCTURES */ 
@@ -100,9 +99,9 @@ void Console::move_cursor() {
     *  learn more, you should look up some VGA specific
     *  programming documents. A great start to graphics:
     *  http://www.brackeen.com/home/vga */
-    Machine::outportb(0x3D4, (char)14);
+    outportb(0x3D4, (char)14);
     //outportb(0x3D5, temp >> 8);
-    Machine::outportb(0x3D4, 15);
+    outportb(0x3D4, 15);
     //outportb(0x3D5, (char)temp);
 }
 

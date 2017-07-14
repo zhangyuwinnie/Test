@@ -1,4 +1,4 @@
-/*
+/* 
     File: simple_timer.C
 
     Author: R. Bettati
@@ -6,7 +6,6 @@
             Texas A&M University
     Date  : 09/03/19
 
-    Simple control of the
 */
 
 /*--------------------------------------------------------------------------*/
@@ -25,13 +24,15 @@
 #include "interrupts.H"
 #include "simple_timer.H"
 
+#include "scheduler.H"
+extern Scheduler* SYSTEM_SCHEDULER; 
 /*--------------------------------------------------------------------------*/
 /* CONSTRUCTOR */
 /*--------------------------------------------------------------------------*/
 
 SimpleTimer::SimpleTimer(int _hz) {
   /* How long has the system been running? */
-  seconds =  0;
+  seconds =  0; 
   ticks   =  0; /* ticks since last "seconds" update.    */
 
   /* At what frequency do we update the ticks counter? */
@@ -51,18 +52,27 @@ SimpleTimer::SimpleTimer(int _hz) {
 void SimpleTimer::handle_interrupt(REGS *_r) {
 /* What to do when timer interrupt occurs? In this case, we update "ticks",
    and maybe update "seconds".
-   This must be installed as the interrupt handler for the timer in the
+   This must be installed as the interrupt handler for the timer in the 
    when the system gets initialized. (e.g. in "kernel.C") */
 
     /* Increment our "ticks" count */
     ticks++;
 
-    /* Whenever a second is over, we update counter accordingly. */
-    if (ticks >= hz )
+    /* Whenever 50 ms is over, we update counter accordingly. */
+    if (ticks >= (hz/20) )
     {
         seconds++;
         ticks = 0;
-        Console::puts("One second has passed\n");
+        /*  if (generated_by_slave_PIC(int_no))
+		outportb(0xA0, 0x20);*/
+
+        /* Send an EOI message to the master interrupt controller. */
+        outportb(0x20, 0x20);
+   
+        //Console::puts("One second has passed\n");
+        Console::puts("\n~~~~~~~~~~~~~~~~~~~~~Time to switch thread~~~~~~~~~~~~~~~~~~~~~~\n");
+    	SYSTEM_SCHEDULER->resume(Thread::CurrentThread());
+	SYSTEM_SCHEDULER->yield();
     }
 }
 
@@ -71,11 +81,11 @@ void SimpleTimer::set_frequency(int _hz) {
 /* Set the interrupt frequency for the simple timer.
    Preferably set this before installing the timer handler!                 */
 
-    hz = _hz;                            /* Remember the frequency.           */
-    int divisor = 1193180 / _hz;         /* The input clock runs at 1.19MHz   */
-    Machine::outportb(0x43, 0x34);                /* Set command byte to be 0x36.      */
-    Machine::outportb(0x40, divisor & 0xFF);      /* Set low byte of divisor.          */
-    Machine::outportb(0x40, divisor >> 8);        /* Set high byte of divisor.         */
+  hz = _hz;                            /* Remember the frequency.           */
+  int divisor = 1193180 / _hz;         /* The input clock runs at 1.19MHz   */
+  outportb(0x43, 0x34);                /* Set command byte to be 0x36.      */
+  outportb(0x40, divisor & 0xFF);      /* Set low byte of divisor.          */
+  outportb(0x40, divisor >> 8);        /* Set high byte of divisor.         */
 }
 
 void SimpleTimer::current(unsigned long * _seconds, int * _ticks) {
