@@ -1,4 +1,4 @@
-CSCE 410/611: MP5 -- README.TXT
+CSCE 410/611: MP6 -- README.TXT
 
 This file describes the content of this directory.
 A file marked with (*) may be of some interest to the 
@@ -17,6 +17,10 @@ dev_kernel_grub.img     Image file of the boot floopy.
 bochsrc.bxrc            Description file for the system. 
                         Type 'bochs -f bochsrc.bxrc' to
                         start emulation.
+c.img                   File representation for disk "C"
+d.img                   and "D". "C" is connected to the
+                        MASTER port on ATA-0,
+                        "D" is connected to the SLAVE port.
 
 COMPILATION:
 ===========
@@ -69,9 +73,15 @@ simple_timer.H/C (*)    Routines to control the periodic interval
 simple_keyboard.H/C(*)  Routines to access the keyboard. Primarily as
                         way to wait until user presses key.
 
-machine_low.H/asm       Various low-level x86 specific stuff.
+simple_disk.H/C(**)     Simple LBA28 disk driver. Uses busy waiting
+                        from operation issue until disk is ready
+                        for data transfer. Use this class as 
+                        base class for BlockingDisk.
 
-page_table.H (**)       Definition of the page table interface.
+blocking_disk.H/C(**)   Implementation shell for the
+                        BlockingDisk.
+			
+machine_low.H/asm       Various low-level x86 specific stuff.
 
 frame_pool.H/C          Definition and implementation of a
                         vanilla physical frame memory manager.
@@ -93,7 +103,7 @@ UTILITIES:
 
 FILE: 			DESCRIPTION:
 
-copykernel.sh (**)	Simple script to copy the kernel onto
+copykernel.sh (*)	Simple script to copy the kernel onto
 	      		the floppy image.
                         The script mounts the floppy image, copies the kernel
 			image onto it, and then unmounts the floppy image again.
