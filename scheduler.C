@@ -1,74 +1,88 @@
-/* 
-    Author: Ningyuan Wang
-			Based on code by:
-			R. Bettati
-            Department of Computer Science
-            Texas A&M University
-			
-			A thread scheduler.
+/*
+ File: scheduler.C
 
-*/
+ Author:
+ Date  :
+
+ */
+
+/*--------------------------------------------------------------------------*/
+/* DEFINES */
+/*--------------------------------------------------------------------------*/
+
+/* -- (none) -- */
+
+/*--------------------------------------------------------------------------*/
+/* INCLUDES */
+/*--------------------------------------------------------------------------*/
 
 #include "scheduler.H"
+#include "thread.H"
+#include "console.H"
+#include "utils.H"
+#include "assert.H"
+#include "simple_keyboard.H"
 
 /*--------------------------------------------------------------------------*/
-/* SCHEDULER */
+/* DATA STRUCTURES */
 /*--------------------------------------------------------------------------*/
 
-    Scheduler::Scheduler()
-    /* Setup the scheduler. This sets up the ready queue, for example.
-      If the scheduler implements some sort of round-robin scheme, then the 
-      end_of_quantum handler is installed here as well. */
-    {
-        queue = Queue<Thread*>();
-        return;
-    }
-    void Scheduler::yield()
-    /* Called by the currently running thread in order to give up the CPU. 
-      The scheduler selects the next thread from the ready queue to load onto 
-      the CPU, and calls the dispatcher function defined in 'threads.h' to
-      do the context switch. */
-    {
-        if ( Machine::interrupts_enabled())
-            Machine::disable_interrupts();
-        Thread* target = queue.dequeue();
-     /*
-	Console::puts("q_len:");
-        Console::puti(queue.get_size());
-        Console::puts("\n");
-      */
-        Thread::dispatch_to(target);
-        return;
-    }
+/* -- (none) -- */
 
-    void Scheduler::resume(Thread * _thread)
-    /* Add the given thread to the ready queue of the scheduler. This is called
-      for threads that were waiting for an event to happen, or that have 
-      to give up the CPU in response to a preemption. */
-    {
-        if ( Machine::interrupts_enabled())
-            Machine::disable_interrupts();
-        queue.enqueue(_thread);
-        return;
-    }
+/*--------------------------------------------------------------------------*/
+/* CONSTANTS */
+/*--------------------------------------------------------------------------*/
 
-    void Scheduler::add(Thread * _thread)
-    /* Make the given thread runnable by the scheduler. This function is called
-	  typically after thread creation. Depending on the
-      implementation, this may not entail more than simply adding the 
-      thread to the ready queue (see scheduler_resume). */
-    {
-        queue.enqueue(_thread);
-        return;
-    }
+/* -- (none) -- */
 
-    void Scheduler::terminate(Thread * _thread)
-    /* Remove the given thread from the scheduler in preparation for destruction
-      of the thread. */
-    {
-        if (Machine::interrupts_enabled())
-            Machine::disable_interrupts();
-        queue.remove(_thread);
-        return;
-    }
+/*--------------------------------------------------------------------------*/
+/* FORWARDS */
+/*--------------------------------------------------------------------------*/
 
+/* -- (none) -- */
+
+/*--------------------------------------------------------------------------*/
+/* METHODS FOR CLASS   S c h e d u l e r  */
+/*--------------------------------------------------------------------------*/
+
+Scheduler::Scheduler() {
+  // assert(false);
+  queueSize = 0;
+  Console::puts("Constructed Scheduler.\n");
+}
+
+void Scheduler::yield() {
+  // assert(false);
+  if (queueSize != 0){
+    queueSize--;
+    Thread* next = readyQueue.dequeue();// get next thread
+    Thread::dispatch_to(next); // run the new thread
+  }
+  // Machine::enable_interrupts();
+}
+
+void Scheduler::resume(Thread * _thread) {
+  // assert(false);
+    readyQueue.enqueue(_thread); // add thread to queue
+    queueSize++;
+}
+
+void Scheduler::add(Thread * _thread) {
+  // assert(false);
+    readyQueue.enqueue(_thread); // add thread to queue
+    queueSize++;
+}
+
+void Scheduler::terminate(Thread * _thread) {
+  // assert(false);
+    bool found = false;
+    for (int i = 0;i < queueSize; i++){
+        Thread* curt = readyQueue.dequeue();
+        if (curt->ThreadId() == _thread->ThreadId())
+            found = true;//variable used to check if we found the thread we wanted to terminate
+        else //if temp matches thread do not re-enqueue it back on the list
+            readyQueue.enqueue(curt);//else just push it back on
+    }
+    if (found)
+        queueSize--;
+}

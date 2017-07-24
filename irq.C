@@ -20,7 +20,7 @@
 /* INCLUDES */
 /*--------------------------------------------------------------------------*/
 
-#include "utils.H"
+#include "machine.H"
 #include "irq.H"
 
 /*--------------------------------------------------------------------------*/
@@ -35,16 +35,16 @@
 */
 static void irq_remap()
 {
-    outportb(0x20, 0x11);
-    outportb(0xA0, 0x11);
-    outportb(0x21, 0x20);
-    outportb(0xA1, 0x28);
-    outportb(0x21, 0x04);
-    outportb(0xA1, 0x02);
-    outportb(0x21, 0x01);
-    outportb(0xA1, 0x01);
-    outportb(0x21, 0x0);
-    outportb(0xA1, 0x0);
+    Machine::outportb(0x20, 0x11);
+    Machine::outportb(0xA0, 0x11);
+    Machine::outportb(0x21, 0x20);
+    Machine::outportb(0xA1, 0x28);
+    Machine::outportb(0x21, 0x04);
+    Machine::outportb(0xA1, 0x02);
+    Machine::outportb(0x21, 0x01);
+    Machine::outportb(0xA1, 0x01);
+    Machine::outportb(0x21, 0x0);
+    Machine::outportb(0xA1, 0x0);
 }
 
 

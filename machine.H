@@ -82,29 +82,49 @@ typedef struct regs {
 class Machine {
 
 public:
+    
+/*---------------------------------------------------------------*/
+/* DATA AND CODE SEGMENT FOR KERNEL */
+/*---------------------------------------------------------------*/
   
-  /* Data and code segment for kernel */
-
-  static const int KERNEL_DS = 0x10;
-  static const int KERNEL_CS = 0x08;
-
-  /* Memory Management */
+  static const unsigned int KERNEL_DS = 0x10;
+  static const unsigned int KERNEL_CS = 0x08;
+    
+/*---------------------------------------------------------------*/
+/* MEMORY MANAGEMENT */
+/*---------------------------------------------------------------*/
 
   static const unsigned int PAGE_SIZE = 4096;
   static const unsigned int PT_ENTRIES_PER_PAGE = 1024;
 
+/*---------------------------------------------------------------*/
+/* INTERRUPTS */
+/*---------------------------------------------------------------*/
+
   /*
-   Manage interrupts. This is done by checking the Interrupt Enabled flag in the 
+   This is done by checking the Interrupt Enabled flag in the 
    EFLAG status register and by issuing STI/CLI instructions.
    (NOTE: If we have multiple threads, each has its own status register.)
   */
 
-  static int interrupts_enabled();
-  /* Returns FALSE if interrupts are disabled, and (1<<9) if they are enabled. */
+  static bool interrupts_enabled();
+  /* Returns whether interrupts are enabled. */
 
   static void enable_interrupts();
   static void disable_interrupts();
   /* Issue CLI/STI instructions. */
+
+/*---------------------------------------------------------------*/
+/* PORT I/O OPERATIONS */
+/*---------------------------------------------------------------*/
+
+  static char inportb  (unsigned short _port);
+  static unsigned short inportw (unsigned short _port);
+  /* Read data from input port _port.*/
+
+  static void outportb (unsigned short _port, char _data);
+  static void outportw (unsigned short _port, unsigned short _data);
+  /* Write _data to output port _port.*/
 
 };
 #endif
